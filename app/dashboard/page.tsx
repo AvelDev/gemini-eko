@@ -224,7 +224,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="transition-shadow cursor-pointer hover:shadow-lg">
+              {/* <Card className="transition-shadow cursor-pointer hover:shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Award className="w-5 h-5 mr-2" />
@@ -260,7 +260,7 @@ export default function Dashboard() {
                     </Button>
                   </Link>
                 </CardContent>
-              </Card>
+              </Card> */}
             </>
           ) : (
             <>
