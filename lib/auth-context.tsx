@@ -51,25 +51,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUser(user);
-        // Fetch user data from Firestore
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-          setUserData(userDoc.data() as UserData);
+      try {
+        if (user) {
+          setUser(user);
+          // Fetch user data from Firestore
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            setUserData(userDoc.data() as UserData);
+          } else {
+            // If user document doesn't exist, clear userData but keep user
+            console.log("User document not found in Firestore for:", user.uid);
+            setUserData(null);
+          }
+        } else {
+          setUser(null);
+          setUserData(null);
         }
-      } else {
-        setUser(null);
-        setUserData(null);
+      } catch (error) {
+        console.error("Error in auth state change:", error);
+        // On error, still set user but clear userData
+        if (user) {
+          setUser(user);
+          setUserData(null);
+        } else {
+          setUser(null);
+          setUserData(null);
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      console.error("Sign in error:", error);
+      throw error;
+    }
   };
 
   const signUp = async (
@@ -78,22 +100,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     displayName: string,
     role: "participant" | "organizer"
   ) => {
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
 
-    // Save user data to Firestore
-    const userData: UserData = {
-      uid: userCredential.user.uid,
-      email: userCredential.user.email!,
-      displayName,
-      role,
-    };
+      // Save user data to Firestore
+      const userData: UserData = {
+        uid: userCredential.user.uid,
+        email: userCredential.user.email!,
+        displayName,
+        role,
+      };
 
-    await setDoc(doc(db, "users", userCredential.user.uid), userData);
-    setUserData(userData);
+      await setDoc(doc(db, "users", userCredential.user.uid), userData);
+      setUserData(userData);
+    } catch (error) {
+      console.error("Sign up error:", error);
+      throw error;
+    }
   };
 
   const logout = async () => {

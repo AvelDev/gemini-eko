@@ -20,14 +20,14 @@ import {
 import type { Event, UserBadge } from "@/lib/types";
 
 export default function Dashboard() {
-  const { userData } = useAuth();
+  const { userData, loading } = useAuth();
   const [stats, setStats] = useState({
     events: 0,
     badges: 0,
     participants: 0,
     materials: 0,
   });
-  const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     async function loadStats() {
@@ -77,19 +77,36 @@ export default function Dashboard() {
       } catch (error) {
         console.error("Error loading stats:", error);
       } finally {
-        setLoading(false);
+        setStatsLoading(false);
       }
     }
 
     loadStats();
   }, [userData]);
 
-  if (!userData) {
+  // Show loading spinner while auth is loading
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
           <div className="w-12 h-12 mx-auto border-b-2 border-green-600 rounded-full animate-spin"></div>
           <p className="mt-4 text-gray-600">Ładowanie...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!userData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <p className="mb-4 text-gray-600">
+            Musisz się zalogować, aby uzyskać dostęp do tej strony.
+          </p>
+          <Link href="/login">
+            <Button>Przejdź do logowania</Button>
+          </Link>
         </div>
       </div>
     );
@@ -120,7 +137,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {loading ? "..." : stats.events}
+                {statsLoading ? "..." : stats.events}
               </div>
               <p className="text-xs text-muted-foreground">
                 {isOrganizer ? "Utworzone" : "Uczestniczę"}
@@ -135,7 +152,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {loading ? "..." : stats.badges}
+                {statsLoading ? "..." : stats.badges}
               </div>
               <p className="text-xs text-muted-foreground">
                 {isOrganizer ? "Utworzone" : "Zdobyte"}
@@ -156,7 +173,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {loading
+                {statsLoading
                   ? "..."
                   : isOrganizer
                   ? stats.participants
@@ -177,7 +194,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {loading ? "..." : isOrganizer ? stats.materials : "0"}
+                {statsLoading ? "..." : isOrganizer ? stats.materials : "0"}
               </div>
               <p className="text-xs text-muted-foreground">
                 {isOrganizer ? "Utworzone" : "Ukończone"}

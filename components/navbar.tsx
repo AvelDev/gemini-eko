@@ -37,6 +37,11 @@ export function Navbar() {
                 <Link href="/events">
                   <Button variant="ghost">Wydarzenia</Button>
                 </Link>
+                {userData.role === "participant" && (
+                  <Link href="/learn">
+                    <Button variant="ghost">Nauka</Button>
+                  </Link>
+                )}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

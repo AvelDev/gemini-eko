@@ -101,12 +101,12 @@ export function MaterialEditor({
                       className="w-full h-48 object-cover rounded-md mb-4"
                     />
                   )}
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    className="prose prose-sm max-w-none"
-                  >
-                    {material.content || "*Podgląd treści pojawi się tutaj...*"}
-                  </ReactMarkdown>
+                  <div className="prose prose-sm max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {material.content ||
+                        "*Podgląd treści pojawi się tutaj...*"}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>

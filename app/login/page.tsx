@@ -32,8 +32,25 @@ export default function Login() {
       await signIn(email, password);
       toast.success("Zalogowano pomyślnie!");
       router.push("/dashboard");
-    } catch (error) {
-      toast.error("Błąd logowania. Sprawdź swoje dane.");
+    } catch (error: any) {
+      console.error("Login error:", error);
+      let errorMessage = "Błąd logowania. Sprawdź swoje dane.";
+
+      // Handle specific Firebase auth errors
+      if (error.code === "auth/user-not-found") {
+        errorMessage = "Nie znaleziono użytkownika o podanym adresie email.";
+      } else if (error.code === "auth/wrong-password") {
+        errorMessage = "Nieprawidłowe hasło.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Nieprawidłowy format adresu email.";
+      } else if (error.code === "auth/too-many-requests") {
+        errorMessage =
+          "Zbyt wiele nieudanych prób logowania. Spróbuj ponownie później.";
+      } else if (error.code === "auth/invalid-credential") {
+        errorMessage = "Nieprawidłowe dane logowania.";
+      }
+
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

@@ -35,8 +35,22 @@ export default function Register() {
       await signUp(email, password, displayName, role);
       toast.success("Konto zostało utworzone pomyślnie!");
       router.push("/dashboard");
-    } catch (error) {
-      toast.error("Błąd rejestracji. Spróbuj ponownie.");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      let errorMessage = "Błąd rejestracji. Spróbuj ponownie.";
+
+      // Handle specific Firebase auth errors
+      if (error.code === "auth/email-already-in-use") {
+        errorMessage = "Konto z tym adresem email już istnieje.";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "Hasło jest zbyt słabe. Użyj co najmniej 6 znaków.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Nieprawidłowy format adresu email.";
+      } else if (error.code === "auth/operation-not-allowed") {
+        errorMessage = "Rejestracja jest tymczasowo wyłączona.";
+      }
+
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

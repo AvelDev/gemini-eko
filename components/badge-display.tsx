@@ -7,7 +7,7 @@ interface BadgeProps {
   size?: "sm" | "md" | "lg";
 }
 
-export function Badge({
+export function BadgeDisplay({
   shape,
   color,
   emoji,
@@ -32,21 +32,28 @@ export function Badge({
     const rgb = hexToRgb(baseColor);
     if (!rgb) return baseColor;
 
-    const lighter = `rgb(${Math.min(255, rgb.r + 40)}, ${Math.min(255, rgb.g + 40)}, ${Math.min(255, rgb.b + 40)})`;
-    const darker = `rgb(${Math.max(0, rgb.r - 40)}, ${Math.max(0, rgb.g - 40)}, ${Math.max(0, rgb.b - 40)})`;
+    const lighter = `rgb(${Math.min(255, rgb.r + 40)}, ${Math.min(
+      255,
+      rgb.g + 40
+    )}, ${Math.min(255, rgb.b + 40)})`;
+    const darker = `rgb(${Math.max(0, rgb.r - 40)}, ${Math.max(
+      0,
+      rgb.g - 40
+    )}, ${Math.max(0, rgb.b - 40)})`;
 
     return `linear-gradient(135deg, ${lighter} 0%, ${baseColor} 50%, ${darker} 100%)`;
   };
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16),
-        }
-      : null;
+    if (!result) return null;
+
+    const [, redHex, greenHex, blueHex] = result;
+    return {
+      r: parseInt(redHex, 16),
+      g: parseInt(greenHex, 16),
+      b: parseInt(blueHex, 16),
+    };
   };
 
   const badgeStyle = {
@@ -57,7 +64,9 @@ export function Badge({
   return (
     <div className="text-center space-y-2">
       <div
-        className={`${sizeClasses[size]} mx-auto flex items-center justify-center text-white font-bold border-4 border-white shadow-lg ${
+        className={`${
+          sizeClasses[size]
+        } mx-auto flex items-center justify-center text-white font-bold border-4 border-white shadow-lg ${
           shape === "circle" ? "rounded-full" : "rounded-lg"
         }`}
         style={badgeStyle}

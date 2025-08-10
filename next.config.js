@@ -7,7 +7,8 @@ const withPWA = require("next-pwa")({
 });
 
 const nextConfig = withPWA({
-  output: "export",
+  // Use export only in production build
+  ...(process.env.NODE_ENV === "production" && { output: "export" }),
   eslint: {
     ignoreDuringBuilds: true,
   },

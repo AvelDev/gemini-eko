@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge as BadgeDisplay } from "@/components/badge-display";
+import { BadgeDisplay } from "@/components/badge-display";
 import { Badge } from "@/components/ui/badge";
 import { Settings, Award, Calendar, BookOpen, Edit } from "lucide-react";
 import Link from "next/link";

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "./badge-display";
+import { BadgeDisplay } from "./badge-display";
 
 interface BadgeData {
   shape: "circle" | "rosette";
@@ -55,8 +55,8 @@ interface BadgeCreatorProps {
 export function BadgeCreator({ onSave, onCancel }: BadgeCreatorProps) {
   const [badge, setBadge] = useState<BadgeData>({
     shape: "circle",
-    color: colors[0].value,
-    emoji: emojis[0],
+    color: colors.find((c) => c.name === "Zielony")?.value || "#16a34a",
+    emoji: emojis.find((e) => e === "🌱") || "🌱",
     title: "",
     description: "",
   });
@@ -175,7 +175,7 @@ export function BadgeCreator({ onSave, onCancel }: BadgeCreatorProps) {
         </CardHeader>
         <CardContent>
           <div className="flex justify-center">
-            <Badge
+            <BadgeDisplay
               shape={badge.shape}
               color={badge.color}
               emoji={badge.emoji}
