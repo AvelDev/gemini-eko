@@ -1,0 +1,161 @@
+// Firebase Security Rules for EKO-Odznaki application
+// These rules secure Firestore data access based on user authentication and roles
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isOrganizer() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "organizer";
+    }
+    
+    function isEventOrganizer(eventOrgId) {
+      return isAuthenticated() && request.auth.uid == eventOrgId;
+    }
+    
+    function isEventParticipant(eventId) {
+      return isAuthenticated() && 
+             request.auth.uid in get(/databases/$(database)/documents/events/$(eventId)).data.participants;
+    }
+
+    // Users collection - users can read/write their own data
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+      allow read: if isAuthenticated(); // Others can read basic user info (for events, etc.)
+    }
+
+    // Events collection
+    match /events/{eventId} {
+      // Anyone can read events (public visibility)
+      allow read: if true;
+      
+      // Only organizers can create events
+      allow create: if isAuthenticated() && isOrganizer() && 
+                       request.auth.uid == resource.data.organizerId;
+      
+      // Only event organizer can update/delete their events
+      allow update, delete: if isAuthenticated() && 
+                               isEventOrganizer(resource.data.organizerId);
+    }
+
+    // Event participants collection
+    match /eventParticipants/{participantId} {
+      // Users can read their own participations, organizers can read their event participants
+      allow read: if isAuthenticated() && 
+                     (isOwner(resource.data.userId) || 
+                      isEventOrganizer(get(/databases/$(database)/documents/events/$(resource.data.eventId)).data.organizerId));
+      
+      // Users can create their own participation records
+      allow create: if isAuthenticated() && 
+                       isOwner(resource.data.userId) &&
+                       request.auth.uid == resource.data.userId;
+      
+      // Users can delete their own participation, organizers can remove participants
+      allow delete: if isAuthenticated() && 
+                       (isOwner(resource.data.userId) || 
+                        isEventOrganizer(get(/databases/$(database)/documents/events/$(resource.data.eventId)).data.organizerId));
+    }
+
+    // Materials collection
+    match /materials/{materialId} {
+      // Event participants and organizers can read materials
+      allow read: if isAuthenticated() && 
+                     (isEventParticipant(resource.data.eventId) || 
+                      isEventOrganizer(resource.data.organizerId));
+      
+      // Only event organizer can create/update/delete materials
+      allow create: if isAuthenticated() && 
+                       isOrganizer() && 
+                       request.auth.uid == resource.data.organizerId;
+      
+      allow update, delete: if isAuthenticated() && 
+                               isEventOrganizer(resource.data.organizerId);
+    }
+
+    // Badges collection
+    match /badges/{badgeId} {
+      // Event participants and organizers can read badges
+      allow read: if isAuthenticated() && 
+                     (isEventParticipant(resource.data.eventId) || 
+                      isEventOrganizer(resource.data.organizerId));
+      
+      // Only event organizer can create/update/delete badges
+      allow create: if isAuthenticated() && 
+                       isOrganizer() && 
+                       request.auth.uid == resource.data.organizerId;
+      
+      allow update, delete: if isAuthenticated() && 
+                               isEventOrganizer(resource.data.organizerId);
+    }
+
+    // User badges collection (awarded badges)
+    match /userBadges/{userBadgeId} {
+      // Users can read their own badges, organizers can read badges they awarded
+      allow read: if isAuthenticated() && 
+                     (isOwner(resource.data.userId) || 
+                      isOwner(resource.data.awardedBy));
+      
+      // Only organizers can award badges
+      allow create: if isAuthenticated() && 
+                       isOrganizer() && 
+                       request.auth.uid == resource.data.awardedBy &&
+                       isEventOrganizer(get(/databases/$(database)/documents/events/$(resource.data.eventId)).data.organizerId);
+      
+      // Only the organizer who awarded the badge can delete it
+      allow delete: if isAuthenticated() && 
+                       isOwner(resource.data.awardedBy);
+    }
+
+    // Missions collection
+    match /missions/{missionId} {
+      // Event participants and organizers can read missions
+      allow read: if isAuthenticated() && 
+                     (isEventParticipant(resource.data.eventId) || 
+                      isEventOrganizer(resource.data.organizerId));
+      
+      // Only event organizer can create/update/delete missions
+      allow create: if isAuthenticated() && 
+                       isOrganizer() && 
+                       request.auth.uid == resource.data.organizerId;
+      
+      allow update, delete: if isAuthenticated() && 
+                               isEventOrganizer(resource.data.organizerId);
+    }
+
+    // User missions collection (mission completions)
+    match /userMissions/{userMissionId} {
+      // Users can read their own mission completions, organizers can read completions for their events
+      allow read: if isAuthenticated() && 
+                     (isOwner(resource.data.userId) || 
+                      isEventOrganizer(get(/databases/$(database)/documents/events/$(resource.data.eventId)).data.organizerId));
+      
+      // Users can create their own mission completions
+      allow create: if isAuthenticated() && 
+                       isOwner(resource.data.userId) &&
+                       isEventParticipant(resource.data.eventId);
+      
+      // Users can update their own mission completions
+      allow update: if isAuthenticated() && 
+                       isOwner(resource.data.userId);
+      
+      // Only organizers can delete mission completions
+      allow delete: if isAuthenticated() && 
+                       isEventOrganizer(get(/databases/$(database)/documents/events/$(resource.data.eventId)).data.organizerId);
+    }
+    
+    // Default rule: deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
